@@ -27,9 +27,10 @@
 ;; Windows isn't welcome in my home so this is an easy way to tell if I'm working at the office.
 (defvar at-the-office-p (eq system-type 'windows-nt))
 
-;; These aren't quite as useful as they were pre-ELPA but I'll keep them around for now.
-(defvar libdir (expand-file-name "~/.emacs.d"))
+(defvar office-email-address "justin.hipple@zuerchertech.com")
+(defvar home-email-address "brokenreality@gmail.com")
 
+(defvar libdir (expand-file-name "~/.emacs.d"))
 (defun libdir-file (file) (concat libdir "/" file))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -130,8 +131,7 @@
            (revert-buffer-function " %b"("%b - Dir:  " default-directory)))))))
 
 ;; Set an appropriate email address depending on whether I'm at work or home.
-(setq user-mail-address
-      (if at-the-office-p "hipplej@zuerchertech.com" "brokenreality@gmail.com"))
+(setq user-mail-address (if at-the-office-p office-email-address home-email-address))
 
 ;; Don't show the damn splash screen.
 (setq inhibit-splash-screen t)
