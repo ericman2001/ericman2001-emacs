@@ -34,6 +34,19 @@
 (defun libdir-file (file) (concat libdir "/" file))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Setup Font
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Evidently there are weird display issues if this is set after color theme is loaded?
+;; Spawning a new frame resulted in very strange colors applied to all buffers it contained.
+(defvar my-font
+  (if at-the-office-p
+      "-outline-Bitstream Vera Sans Mono-normal-normal-normal-mono-11-*-*-*-c-*-iso8859-1"
+    "-apple-Bitstream_Vera_Sans_Mono-medium-normal-normal-*-14-*-*-*-m-0-iso10646-1"))
+(setq initial-frame-alist `((font . ,my-font)))
+(setq default-frame-alist `((font . ,my-font)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Setup ELPA
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -93,13 +106,6 @@
 ;; Misc Settings
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; Set the default font to something nice.
-(defvar my-font
-  (if at-the-office-p
-      "-outline-Bitstream Vera Sans Mono-normal-normal-normal-mono-11-*-*-*-c-*-iso8859-1"
-    "-apple-Bitstream_Vera_Sans_Mono-medium-normal-normal-*-14-*-*-*-m-0-iso10646-1"))
-(setq initial-frame-alist `((font . ,my-font)))
-(setq default-frame-alist `((font . ,my-font)))
 
 ;; Ensure the Command key is Meta on OSX.
 (if (not at-the-office-p)
