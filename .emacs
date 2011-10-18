@@ -20,6 +20,10 @@
  '(tool-bar-mode nil)
  '(visible-bell t))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Utility functions and variables
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 ;; Windows isn't welcome in my home so this is an easy way to tell if I'm working at the office.
 (defvar at-the-office-p (eq system-type 'windows-nt))
 
@@ -28,20 +32,65 @@
 
 (defun libdir-file (file) (concat libdir "/" file))
 
-;; There are only a couple of packages that have to be managed manually now.
-(defvar lib-dirs '("elpa" "yasnippet-0.6.1c" "themes"))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Setup ELPA
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; Add all the libs to the load path.
 ;; Ideally, ELPA would be the only package we would load manually
 ;; and all other packages would be managed through ELPA.
 ;; Unfortunately a handful of packages aren't in repositories so
 ;; we still have to load them manually for now.
-(mapcar #'(lambda (path) (add-to-list 'load-path (libdir-file path))) lib-dirs)
+(mapcar #'(lambda (path) (add-to-list 'load-path (libdir-file path))) '("elpa" "themes"))
 
 ;; ELPA package archive system.
 (require 'package)
 (add-to-list 'package-archives '("marmalade" . "http://marmalade-repo.org/packages/"))
 (package-initialize)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Setup Packages
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Maxmize the window and start with 50/50 vertical split.
+(require 'maxframe)
+(add-hook 'window-setup-hook 'maximize-frame t)
+(add-hook 'window-setup-hook 'split-window-horizontally)
+
+;; Enable syntax highlighting.
+(require 'color-theme-subdued)
+(color-theme-subdued)
+
+;; Enable yasnippet for fancy templates.
+(require 'yasnippet)
+(yas/initialize)
+(yas/load-directory (libdir-file "elpa/yasnippet-0.6.1/snippets"))
+
+;; Enable fancy window switching.
+(require 'switch-window)
+
+;; Enable IDO to handle buffer switching and such.
+(require 'ido)
+(ido-mode t)
+(setq ido-ignore-buffers '("\\` " "^\*Mess" "^\*Back" "^\*scratch" ".*Completion" "^\*Ido") ; ignore these
+      ido-everywhere t            ; use for many file dialogs
+	  ido-case-fold  t            ; be case-insensitive
+	  ido-enable-flex-matching t  ; be flexible
+	  ido-max-prospects 5         ; don't spam my minibuffer
+	  ido-confirm-unique-completion t ; wait for RET, even with unique completion
+	  ido-auto-merge-werk-directories-length -1) ; new file if no match
+
+;; Enable fancy autocompletion in code.
+(require 'auto-complete-config)
+(add-to-list 'ac-dictionary-directories (libdir-file "auto-complete/ac-dict"))
+(ac-config-default)
+(setq ac-use-menu-map t)
+(define-key ac-menu-map (kbd "C-n") 'ac-next)
+(define-key ac-menu-map (kbd "C-p") 'ac-previous)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Misc Settings
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; Set the default font to something nice.
 (defvar my-font
@@ -58,15 +107,6 @@
       (setq mac-command-key-is-meta t)
       (setq mac-command-modifier 'meta)
       (setq mac-option-modifier nil)))
-
-;; Maxmize the window and start with 50/50 vertical split.
-(require 'maxframe)
-(add-hook 'window-setup-hook 'maximize-frame t)
-(add-hook 'window-setup-hook 'split-window-horizontally)
-
-;; Enable syntax highlighting.
-(require 'color-theme-subdued)
-(color-theme-subdued)
 
 ;; Tabs cause nothing but headaches but I'm forced to use them at work.
 (setq-default tab-width 4)
@@ -107,49 +147,30 @@
       (remq 'process-kill-buffer-query-function
             kill-buffer-query-functions))
 
-; Prevent accidentally killing emacs.
-(defun confirm-exit-from-emacs()
-  (interactive)
-  (if (yes-or-no-p "Do you want to exit? ")
-      (save-buffers-kill-emacs)))
-(global-set-key "\C-x\C-c" 'confirm-exit-from-emacs)
-
 ;; Default to 'string' mode when using re-builder.
 (setq reb-re-syntax 'string)
 
 ;; Always show line numbers.
 (global-linum-mode t)
 
-;; Enable yasnippet for fancy templates.
-(require 'yasnippet)
-(yas/initialize)
-(yas/load-directory (libdir-file "yasnippet-0.6.1c/snippets"))
-
-;; Enable fancy window switching.
-(require 'switch-window)
-
-;; Enable IDO to handle buffer switching and such.
-(require 'ido)
-(ido-mode t)
-(setq ido-ignore-buffers '("\\` " "^\*Mess" "^\*Back" "^\*scratch" ".*Completion" "^\*Ido") ; ignore these
-      ido-everywhere t            ; use for many file dialogs
-	  ido-case-fold  t            ; be case-insensitive
-	  ido-enable-flex-matching t  ; be flexible
-	  ido-max-prospects 5         ; don't spam my minibuffer
-	  ido-confirm-unique-completion t ; wait for RET, even with unique completion
-	  ido-auto-merge-werk-directories-length -1) ; new file if no match
-
-;; Enable fancy autocompletion in code.
-(require 'auto-complete-config)
-(add-to-list 'ac-dictionary-directories (libdir-file "auto-complete/ac-dict"))
-(ac-config-default)
-(setq ac-use-menu-map t)
-(define-key ac-menu-map "\C-n" 'ac-next)
-(define-key ac-menu-map "\C-p" 'ac-previous)
-
 ;; I write C++ so default to the correct mode based on the filetypes I commonly use.
 (add-to-list 'auto-mode-alist '("\\.h\\'" . c++-mode))
 (add-to-list 'auto-mode-alist '("\\.cpp\\'" . c++-mode))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Custom Key Bindings
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; Prevent accidentally killing emacs.
+(defun confirm-exit-from-emacs()
+  (interactive)
+  (if (yes-or-no-p "Do you want to exit? ")
+      (save-buffers-kill-emacs)))
+(global-set-key (kbd "C-x C-c") 'confirm-exit-from-emacs)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Mode Setup
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; C mode specific stuff.
 (add-hook 'c-mode-common-hook
