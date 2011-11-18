@@ -106,7 +106,6 @@
 ;; Misc Settings
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
 ;; Ensure the Command key is Meta on OSX.
 (if (not at-the-office-p)
     (progn
