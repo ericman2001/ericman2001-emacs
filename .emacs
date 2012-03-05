@@ -162,6 +162,12 @@
 (add-to-list 'auto-mode-alist '("\\.h\\'" . c++-mode))
 (add-to-list 'auto-mode-alist '("\\.cpp\\'" . c++-mode))
 
+;; Qt's .pro and .pri files use IDL mode by default, make them not do that.
+;; Also make .conf files use shell script mode.
+(add-to-list 'auto-mode-alist '("\\.pro\\'" . shell-script-mode))
+(add-to-list 'auto-mode-alist '("\\.pri\\'" . shell-script-mode))
+(add-to-list 'auto-mode-alist '("\\.conf\\'" . shell-script-mode))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Custom Key Bindings
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
