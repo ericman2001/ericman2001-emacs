@@ -55,7 +55,7 @@
 ;; and all other packages would be managed through ELPA.
 ;; Unfortunately a handful of packages aren't in repositories so
 ;; we still have to load them manually for now.
-(mapcar #'(lambda (path) (add-to-list 'load-path (libdir-file path))) '("elpa" "themes"))
+(mapcar #'(lambda (path) (add-to-list 'load-path (libdir-file path))) '("elpa" "themes" "pymacs"))
 
 ;; ELPA package archive system.
 (require 'package)
@@ -72,8 +72,7 @@
 (add-hook 'window-setup-hook 'split-window-horizontally)
 
 ;; Enable syntax highlighting.
-(require 'color-theme-subdued)
-(color-theme-subdued)
+(require 'tomorrow-night-bright-theme)
 
 ;; Enable yasnippet for fancy templates.
 (require 'yasnippet)
@@ -94,13 +93,48 @@
 	  ido-confirm-unique-completion t ; wait for RET, even with unique completion
 	  ido-auto-merge-werk-directories-length -1) ; new file if no match
 
+;; Allow IDO to do searching for files in a TAGS file.
+(defun ido-find-file-in-tag-files ()
+  (interactive)
+  (save-excursion
+	(let ((enable-recursive-minibuffers t))
+	  (visit-tags-table-buffer))
+	(find-file
+	 (expand-file-name
+	  (ido-completing-read
+	   "Project file: " (tags-table-files) nil t)))))
+
+;; Turn off fuzzy matching on large search spaces (TAGS) because it's too slow.
+(defvar af-ido-flex-fuzzy-limit (* 2000 5))
+(defadvice ido-set-matches-1 (around my-ido-set-matches-1 activate)
+  (let ((ido-enable-flex-matching (< (* (length (ad-get-arg 0)) (length ido-text))
+                                     af-ido-flex-fuzzy-limit)))
+	ad-do-it))
+
+(global-set-key (kbd "C-x C-t") 'ido-find-file-in-tag-files)
+
+;; Pymacs
+;; NOTE: The Pymacs in ELPA is old.
+;; I like to have the available all the time, even when not working in Python mode.
+(require 'pymacs)
+(autoload 'pymacs-apply "pymacs")
+(autoload 'pymacs-call "pymacs")
+(autoload 'pymacs-eval "pymacs" nil t)
+(autoload 'pymacs-exec "pymacs" nil t)
+(autoload 'pymacs-load "pymacs" nil t)
+(autoload 'pymacs-autoload "pymacs")
+
+;; Ropemacs
+(setq ropemacs-enable-shortcuts nil)
+(setq ropemacs-enable-autoimport t)
+
 ;; Enable fancy autocompletion in code.
 (require 'auto-complete-config)
-(add-to-list 'ac-dictionary-directories (libdir-file "auto-complete/ac-dict"))
 (ac-config-default)
 (setq ac-use-menu-map t)
 (define-key ac-menu-map (kbd "C-n") 'ac-next)
 (define-key ac-menu-map (kbd "C-p") 'ac-previous)
+(setq ac-auto-show-menu 0.1)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Misc Settings
@@ -168,6 +202,20 @@
 (add-to-list 'auto-mode-alist '("\\.pri\\'" . shell-script-mode))
 (add-to-list 'auto-mode-alist '("\\.conf\\'" . shell-script-mode))
 
+;; FIXME: This is still a work in progress...
+;; Use Cygwin as the shell on Windows.
+;; (if at-the-office-p
+;; 	(progn
+;; 	  ;;(setenv "PATH" (concat "C:/msys/home/justin.hipple/bin/:" (getenv "PATH")))
+;; 	  ;;(setenv "HOME" (getenv (concat "/c/msys/home/" (getenv "USER")))) ;; Hack to get paths working properly...
+;; 	  (setenv "PS1" "\\e[0;32m\\u@\\h \\e[0;33m\\W \\e[m\\n\\$ ")
+;; 	  (add-hook 'comint-output-filter-functions 'shell-strip-ctrl-m nil t)
+;; 	  (add-hook 'comint-output-filter-functions 'comint-watch-for-password-prompt nil t)
+;; 	  (setq comint-prompt-read-only t)
+;; 	  (setq explicit-shell-file-name "C:/cygwin/bin/bash")
+;; 	  (setq shell-file-name explicit-shell-file-name)
+;; 	  (setq explicit-bash-args '("--login" "-i"))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Custom Key Bindings
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -186,18 +234,19 @@
 ;; C mode specific stuff.
 (add-hook 'c-mode-common-hook
           (lambda()
-            (progn
-              (local-set-key  (kbd "C-c o") 'ff-find-other-file)
-              (font-lock-add-keywords nil '(("\\<\\(FIXME\\|TODO\\|BUG\\|NOTE\\):" 1 font-lock-warning-face t))))))
+			(local-set-key  (kbd "C-c o") 'ff-find-other-file)
+			(font-lock-add-keywords nil '(("\\<\\(FIXME\\|TODO\\|BUG\\|NOTE\\):" 1 font-lock-warning-face t)))))
 
 ;; Python mode specific stuff.
 (add-hook 'python-mode-hook
-          (lambda()
-            (setq tab-width 4
-                  py-indent-offset 4
-                  indent-tabs-mode at-the-office-p
-                  py-smart-indentation (not at-the-office-p)
-                  python-indent 4)))
+		  (lambda()
+			(setq tab-width 4
+				  py-indent-offset 4
+				  indent-tabs-mode at-the-office-p
+				  py-smart-indentation (not at-the-office-p)
+				  python-indent 4)
+			(ac-ropemacs-setup)
+			(ropemacs-mode t)))
 
 ;; Clojure mode specific stuff.
 (add-hook 'clojure-mode-hook
