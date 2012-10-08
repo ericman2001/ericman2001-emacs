@@ -138,7 +138,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; Ensure the Command key is Meta on OSX.
-(if (using-macbook-p)
+(if using-macbook-p
     (progn
       (setq mac-option-key-is-meta nil)
       (setq mac-command-key-is-meta t)
