@@ -41,6 +41,23 @@
 (defvar libdir (expand-file-name "~/.emacs.d"))
 (defun libdir-file (file) (concat libdir "/" file))
 
+;; Close Emacs with confirmation.
+(defun confirm-exit-from-emacs()
+  (interactive)
+  (if (yes-or-no-p "Do you want to exit? ")
+      (save-buffers-kill-emacs)))
+
+;; Use IDO to search for files in a TAGS file.
+(defun ido-find-file-in-tag-files ()
+  (interactive)
+  (save-excursion
+	(let ((enable-recursive-minibuffers t))
+	  (visit-tags-table-buffer))
+	(find-file
+	 (expand-file-name
+	  (ido-completing-read
+	   "Project file: " (tags-table-files) nil t)))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Setup ELPA
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -88,25 +105,10 @@
 	  ido-confirm-unique-completion t ; wait for RET, even with unique completion
 	  ido-auto-merge-werk-directories-length -1) ; new file if no match
 
-;; Allow IDO to do searching for files in a TAGS file.
-(defun ido-find-file-in-tag-files ()
-  (interactive)
-  (save-excursion
-	(let ((enable-recursive-minibuffers t))
-	  (visit-tags-table-buffer))
-	(find-file
-	 (expand-file-name
-	  (ido-completing-read
-	   "Project file: " (tags-table-files) nil t)))))
-
 ;; Turn off fuzzy matching on large search spaces (TAGS) because it's too slow.
-(defvar af-ido-flex-fuzzy-limit (* 2000 5))
 (defadvice ido-set-matches-1 (around my-ido-set-matches-1 activate)
-  (let ((ido-enable-flex-matching (< (* (length (ad-get-arg 0)) (length ido-text))
-                                     af-ido-flex-fuzzy-limit)))
+  (let ((ido-enable-flex-matching (< (* (length (ad-get-arg 0)) (length ido-text)) 10000)))
 	ad-do-it))
-
-(global-set-key (kbd "C-x C-t") 'ido-find-file-in-tag-files)
 
 ;; Pymacs
 ;; NOTE: The Pymacs in ELPA is old.
@@ -212,15 +214,14 @@
 ;; 	  (setq explicit-bash-args '("--login" "-i"))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Custom Key Bindings
+;; Custom Global Key Bindings
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-; Prevent accidentally killing emacs.
-(defun confirm-exit-from-emacs()
-  (interactive)
-  (if (yes-or-no-p "Do you want to exit? ")
-      (save-buffers-kill-emacs)))
+;; Prevent accidentally killing emacs.
 (global-set-key (kbd "C-x C-c") 'confirm-exit-from-emacs)
+
+;; Attempt to open a distant file quickly by looking in the TAGS file.
+(global-set-key (kbd "C-x C-t") 'ido-find-file-in-tag-files)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Mode Setup
@@ -229,23 +230,28 @@
 ;; C mode specific stuff.
 (add-hook 'c-mode-common-hook
           (lambda()
-			(local-set-key  (kbd "C-c o") 'ff-find-other-file)
-			(font-lock-add-keywords nil '(("\\<\\(FIXME\\|TODO\\|BUG\\|NOTE\\):" 1 font-lock-warning-face t)))))
+			;; Make these patterns more evident in code.
+			(font-lock-add-keywords nil '(("\\<\\(FIXME\\|TODO\\|BUG\\|NOTE\\):" 1 font-lock-warning-face t)))
+			;; Handy for jumping between .h and .cpp files.
+			(local-set-key  (kbd "C-c o") 'ff-find-other-file)))
 
 ;; Python mode specific stuff.
 (add-hook 'python-mode-hook
 		  (lambda()
+			;; Setup the style based one whether I'm at home or the office.
 			(setq tab-width 4
 				  py-indent-offset 4
 				  indent-tabs-mode at-the-office-p
 				  py-smart-indentation (not at-the-office-p)
 				  python-indent 4)
+			;; Rope integration.
 			(ac-ropemacs-setup)
 			(ropemacs-mode t)))
 
 ;; Clojure mode specific stuff.
 (add-hook 'clojure-mode-hook
           (lambda()
+			;; Paredit is sexy.
             (paredit-mode 1)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
