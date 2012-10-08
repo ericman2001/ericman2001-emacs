@@ -199,20 +199,6 @@
 (add-to-list 'auto-mode-alist '("\\.pri\\'" . shell-script-mode))
 (add-to-list 'auto-mode-alist '("\\.conf\\'" . shell-script-mode))
 
-;; FIXME: This is still a work in progress...
-;; Use Cygwin as the shell on Windows.
-;; (if at-the-office-p
-;; 	(progn
-;; 	  ;;(setenv "PATH" (concat "C:/msys/home/justin.hipple/bin/:" (getenv "PATH")))
-;; 	  ;;(setenv "HOME" (getenv (concat "/c/msys/home/" (getenv "USER")))) ;; Hack to get paths working properly...
-;; 	  (setenv "PS1" "\\e[0;32m\\u@\\h \\e[0;33m\\W \\e[m\\n\\$ ")
-;; 	  (add-hook 'comint-output-filter-functions 'shell-strip-ctrl-m nil t)
-;; 	  (add-hook 'comint-output-filter-functions 'comint-watch-for-password-prompt nil t)
-;; 	  (setq comint-prompt-read-only t)
-;; 	  (setq explicit-shell-file-name "C:/cygwin/bin/bash")
-;; 	  (setq shell-file-name explicit-shell-file-name)
-;; 	  (setq explicit-bash-args '("--login" "-i"))))
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Custom Global Key Bindings
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -237,7 +223,7 @@
 
 ;; Python mode specific stuff.
 (add-hook 'python-mode-hook
-		  (lambda()
+          (lambda()
 			;; Setup the style based one whether I'm at home or the office.
 			(setq tab-width 4
 				  py-indent-offset 4
