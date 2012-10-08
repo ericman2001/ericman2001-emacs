@@ -3,10 +3,10 @@
 (require 'cl)
 
 (custom-set-variables
-  ;; custom-set-variables was added by Custom.
-  ;; If you edit it by hand, you could mess it up, so be careful.
-  ;; Your init file should contain only one such instance.
-  ;; If there is more than one, they won't work right.
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
  '(bell-volume 0)
  '(c-basic-offset 4)
  '(c-default-style (quote ((c-mode . "bsd") (c++-mode . "bsd") (java-mode . "java") (other . "bsd"))))
@@ -20,31 +20,26 @@
  '(tool-bar-mode nil)
  '(visible-bell t))
 
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(default ((t (:family "Bitstream Vera Sans Mono" :foundry "bitstream" :slant normal :weight normal :height 98 :width normal)))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Utility functions and variables
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; Windows isn't welcome in my home so this is an easy way to tell if I'm working at the office.
 (defvar at-the-office-p (eq system-type 'windows-nt))
-
+(defvar using-macbook-p (eq system-type 'darwin))
+(defvar using-linux-desktop-p (eq system-type 'gnu/linux))
 (defvar office-email-address "justin.hipple@zuerchertech.com")
 (defvar home-email-address "brokenreality@gmail.com")
 
 (defvar libdir (expand-file-name "~/.emacs.d"))
 (defun libdir-file (file) (concat libdir "/" file))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Setup Font
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;; Evidently there are weird display issues if this is set after color theme is loaded?
-;; Spawning a new frame resulted in very strange colors applied to all buffers it contained.
-(defvar my-font
-  (if at-the-office-p
-      "-outline-Bitstream Vera Sans Mono-normal-normal-normal-mono-11-*-*-*-c-*-iso8859-1"
-    "-apple-Bitstream_Vera_Sans_Mono-medium-normal-normal-*-14-*-*-*-m-0-iso10646-1"))
-(setq initial-frame-alist `((font . ,my-font)))
-(setq default-frame-alist `((font . ,my-font)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Setup ELPA
@@ -141,7 +136,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; Ensure the Command key is Meta on OSX.
-(if (not at-the-office-p)
+(if (using-macbook-p)
     (progn
       (setq mac-option-key-is-meta nil)
       (setq mac-command-key-is-meta t)
