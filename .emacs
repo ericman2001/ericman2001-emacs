@@ -2,6 +2,10 @@
 
 (require 'cl)
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Configuration Menu Variables
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -20,13 +24,6 @@
  '(tool-bar-mode nil)
  '(visible-bell t))
 
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(default ((t (:family "Bitstream Vera Sans Mono" :foundry "bitstream" :slant normal :weight normal :height 98 :width normal)))))
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Utility functions and variables
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -37,12 +34,16 @@
 (defvar using-linux-desktop-p (eq system-type 'gnu/linux))
 (defvar office-email-address "justin.hipple@zuerchertech.com")
 (defvar home-email-address "brokenreality@gmail.com")
+(defvar default-font-name
+  (cond (at-the-office-p "Bitstream Vera Sans Mono-11")
+        (using-macbook-p "Bitstream Vera Sans Mono-14")
+        ("Bitstream Vera Sans Mono-10")))
 
 (defvar libdir (expand-file-name "~/.emacs.d"))
 (defun libdir-file (file) (concat libdir "/" file))
 
 ;; Close Emacs with confirmation.
-(defun confirm-exit-from-emacs()
+(defun confirm-exit-from-emacs ()
   (interactive)
   (if (yes-or-no-p "Do you want to exit? ")
       (save-buffers-kill-emacs)))
@@ -57,6 +58,23 @@
 	 (expand-file-name
 	  (ido-completing-read
 	   "Project file: " (tags-table-files) nil t)))))
+
+;; A handy function for starting the correct shell.
+;; Maybe someday I'll get Cygwin working on Windows.
+;; A better option might be to just virtualize Windows within Linux.
+(defun start-shell ()
+  (interactive)
+  (if at-the-office-p
+      (shell)
+    (ansi-term "/bin/bash")))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Setup Font
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Evidently there are weird display issues if this is set after color theme is loaded?
+;; Spawning a new frame resulted in very strange colors applied to all buffers it contained.
+(set-default-font default-font-name)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Setup ELPA
@@ -199,6 +217,13 @@
 (add-to-list 'auto-mode-alist '("\\.pri\\'" . shell-script-mode))
 (add-to-list 'auto-mode-alist '("\\.conf\\'" . shell-script-mode))
 
+;; You can actually use a real terminal from within Emacs on Linux once the
+;; PATH environment variable is set correctly.
+(if using-linux-desktop-p
+    (progn
+      (setenv "PATH" (concat (getenv "PATH") ":~/bin"))
+      (setq exec-path (append exec-path '("~/bin")))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Custom Global Key Bindings
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -209,13 +234,16 @@
 ;; Attempt to open a distant file quickly by looking in the TAGS file.
 (global-set-key (kbd "C-x C-t") 'ido-find-file-in-tag-files)
 
+;; Open the correct shell, depending on the system I'm using.
+(global-set-key (kbd "<f5>") 'start-shell)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Mode Setup
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; C mode specific stuff.
 (add-hook 'c-mode-common-hook
-          (lambda()
+          (lambda ()
 			;; Make these patterns more evident in code.
 			(font-lock-add-keywords nil '(("\\<\\(FIXME\\|TODO\\|BUG\\|NOTE\\):" 1 font-lock-warning-face t)))
 			;; Handy for jumping between .h and .cpp files.
@@ -223,7 +251,7 @@
 
 ;; Python mode specific stuff.
 (add-hook 'python-mode-hook
-          (lambda()
+          (lambda ()
 			;; Setup the style based one whether I'm at home or the office.
 			(setq tab-width 4
 				  py-indent-offset 4
@@ -236,7 +264,7 @@
 
 ;; Clojure mode specific stuff.
 (add-hook 'clojure-mode-hook
-          (lambda()
+          (lambda ()
 			;; Paredit is sexy.
             (paredit-mode 1)))
 
