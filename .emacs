@@ -35,7 +35,7 @@
 (defvar office-email-address "justin.hipple@zuerchertech.com")
 (defvar home-email-address "brokenreality@gmail.com")
 (defvar default-font-name
-  (cond (at-the-office-p "Bitstream Vera Sans Mono-11")
+  (cond (at-the-office-p "Bitstream Vera Sans Mono-8")
         (using-macbook-p "Bitstream Vera Sans Mono-14")
         ("Bitstream Vera Sans Mono-10")))
 
@@ -75,6 +75,10 @@
 ;; Evidently there are weird display issues if this is set after color theme is loaded?
 ;; Spawning a new frame resulted in very strange colors applied to all buffers it contained.
 (set-default-font default-font-name)
+
+;; These lines seem to be important so that new frames get the font set correctly.
+(setq initial-frame-alist `((font . ,default-font-name)))
+(setq default-frame-alist `((font . ,default-font-name)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Setup ELPA
