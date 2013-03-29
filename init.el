@@ -27,62 +27,20 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Utility functions and variables
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;; Windows isn't welcome in my home so this is an easy way to tell if I'm working at the office.
-(defvar at-the-office-p (eq system-type 'windows-nt))
-(defvar using-macbook-p (eq system-type 'darwin))
-(defvar using-linux-desktop-p (eq system-type 'gnu/linux))
+(defvar using-windows-p (eq system-type 'windows-nt))
+(defvar using-osx-p (eq system-type 'darwin))
+(defvar using-linux-p (eq system-type 'gnu/linux))
 
 (defvar office-email-address "justin.hipple@zuerchertech.com")
 (defvar home-email-address "brokenreality@gmail.com")
 
 (defvar default-font-name
-  (cond (at-the-office-p "Bitstream Vera Sans Mono-8")
-        (using-macbook-p "Bitstream Vera Sans Mono-14")
-        ("Bitstream Vera Sans Mono-10")))
+  (cond (using-windows-p "Bitstream Vera Sans Mono-8")
+		(using-osx-p "Bitstream Vera Sans Mono-14")
+		("Bitstream Vera Sans Mono-10")))
 
 (defun libdir-file (file)
   (concat (expand-file-name "~/.emacs.d") "/" file))
-
-;; Close Emacs with confirmation.
-(defun confirm-exit-from-emacs ()
-  (interactive)
-  (if (yes-or-no-p "Do you want to exit? ")
-      (save-buffers-kill-emacs)))
-(global-set-key (kbd "C-x C-c") 'confirm-exit-from-emacs)
-
-;; Use IDO to search for files in a TAGS file.
-(defun ido-find-file-in-tag-files ()
-  (interactive)
-  (save-excursion
-	(let ((enable-recursive-minibuffers t))
-	  (visit-tags-table-buffer))
-	(find-file
-	 (expand-file-name
-	  (ido-completing-read
-	   "Project file: " (tags-table-files) nil t)))))
-(global-set-key (kbd "C-x C-t") 'ido-find-file-in-tag-files)
-
-;; Starts an MSYS shell, useful when working on Windows.
-;; FIXME: Someday I'll get this working correctly.
-(defun start-msys-shell ()
-  (interactive)
-  (setq shell-file-name "bash.exe")
-  (setq explicit-shell-file-name shell-file-name)
-  (setenv "SHELL" explicit-shell-file-name)
-  (setq w32-quote-process-args t)
-  (setq explicit-bash.exe-args '("--login" "-i"))
-  (setq shell-command-switch "-c")
-  (shell))
-
-;; A handy function for starting the correct shell.
-;; MSYS still doesn't work well enough to replace shell on Windows, unfortunately.
-(defun start-shell ()
-  (interactive)
-  (if at-the-office-p
-      (shell)
-    (ansi-term "/bin/bash")))
-(global-set-key (kbd "<f5>") 'start-shell)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Setup Font
@@ -101,7 +59,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; Add all the libs to the load path.
-(mapcar #'(lambda (path) (add-to-list 'load-path (libdir-file path))) '("themes" "pymacs"))
+(mapcar #'(lambda (path) (add-to-list 'load-path (libdir-file path))) '("themes"))
 
 ;; ELPA package archive system.
 (require 'package)
@@ -111,7 +69,7 @@
 (package-initialize)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Setup Packages
+;; Settings
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; Maxmize the window and start with 50/50 vertical split.
@@ -135,7 +93,7 @@
 (require 'ido)
 (ido-mode t)
 (setq ido-ignore-buffers '("\\` " "^\*Mess" "^\*Back" "^\*scratch" ".*Completion" "^\*Ido") ; ignore these
-      ido-everywhere t            ; use for many file dialogs
+	  ido-everywhere t            ; use for many file dialogs
 	  ido-case-fold  t            ; be case-insensitive
 	  ido-enable-flex-matching t  ; be flexible
 	  ido-max-prospects 5         ; don't spam my minibuffer
@@ -147,23 +105,20 @@
   (let ((ido-enable-flex-matching (< (* (length (ad-get-arg 0)) (length ido-text)) 10000)))
 	ad-do-it))
 
+;; Also use IDO to search for files in a TAGS file.
+(defun ido-find-file-in-tag-files ()
+  (interactive)
+  (save-excursion
+	(let ((enable-recursive-minibuffers t))
+	  (visit-tags-table-buffer))
+	(find-file
+	 (expand-file-name
+	  (ido-completing-read
+	   "Project file: " (tags-table-files) nil t)))))
+(global-set-key (kbd "C-x C-t") 'ido-find-file-in-tag-files)
+
 ;; Minimap support.
 (require 'minimap)
-
-;; Pymacs.
-;; NOTE: The Pymacs in ELPA is old.
-;; I like to have it available all the time, even when not working in Python mode.
-(require 'pymacs)
-(autoload 'pymacs-apply "pymacs")
-(autoload 'pymacs-call "pymacs")
-(autoload 'pymacs-eval "pymacs" nil t)
-(autoload 'pymacs-exec "pymacs" nil t)
-(autoload 'pymacs-load "pymacs" nil t)
-(autoload 'pymacs-autoload "pymacs")
-
-;; Ropemacs.
-(setq ropemacs-enable-shortcuts nil)
-(setq ropemacs-enable-autoimport t)
 
 ;; Enable fancy autocompletion in code.
 (require 'auto-complete-config)
@@ -173,41 +128,52 @@
 (define-key ac-menu-map (kbd "C-p") 'ac-previous)
 (setq ac-auto-show-menu 0.1)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Misc Settings
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Better highlighting functionality for symbol at point.
+(require 'highlight-symbol)
+(global-set-key (kbd "<C-f3>") 'highlight-symbol-at-point)
+(global-set-key (kbd "<M-f3>") 'highlight-symbol-remove-all)
+(global-set-key (kbd "<f3>") 'highlight-symbol-next)
+(global-set-key (kbd "<S-f3>") 'highlight-symbol-prev)
+(global-set-key (kbd "<C-M-f3>") 'highlight-symbol-query-replace)
+
+;; Automatically add proper indentation after newlines.
+(electric-indent-mode t)
+
+;; Automatically add closing character for characters that are commonly paired.
+(electric-pair-mode t)
 
 ;; Ensure the Command key is Meta on OSX.
-(if using-macbook-p
-    (progn
-      (setq mac-option-key-is-meta nil)
-      (setq mac-command-key-is-meta t)
-      (setq mac-command-modifier 'meta)
-      (setq mac-option-modifier nil)))
+(if using-osx-p
+	(progn
+	  (setq mac-option-key-is-meta nil)
+	  (setq mac-command-key-is-meta t)
+	  (setq mac-command-modifier 'meta)
+	  (setq mac-option-modifier nil)))
 
 ;; Tabs cause nothing but headaches but I'm forced to use them at work.
 (setq-default tab-width 4)
-(setq-default indent-tabs-mode at-the-office-p)
+(setq-default indent-tabs-mode using-windows-p)
 
 ;; Always show the buffer name in the title bar.
 (setq-default
  frame-title-format
  (list '((buffer-file-name
-          "Emacs - %f"
-          (dired-directory
-           dired-directory
-           (revert-buffer-function " %b" ("%b - Dir:  " default-directory)))))))
+		  "Emacs - %f"
+		  (dired-directory
+		   dired-directory
+		   (revert-buffer-function " %b" ("%b - Dir:  " default-directory)))))))
 
 (setq-default
  icon-title-format
  (list '((buffer-file-name
-          "Emacs - %f"
-          (dired-directory
-           dired-directory
-           (revert-buffer-function " %b"("%b - Dir:  " default-directory)))))))
+		  "Emacs - %f"
+		  (dired-directory
+		   dired-directory
+		   (revert-buffer-function " %b"("%b - Dir:  " default-directory)))))))
 
 ;; Set an appropriate email address depending on whether I'm at work or home.
-(setq user-mail-address (if at-the-office-p office-email-address home-email-address))
+;; If I'm on Windows it's because I'm doing "real work", so use my work email address.
+(setq user-mail-address (if using-windows-p office-email-address home-email-address))
 
 ;; Don't show the damn splash screen.
 (setq inhibit-splash-screen t)
@@ -220,8 +186,8 @@
 
 ;; Don't prompt me when killing buffers with active processes.
 (setq kill-buffer-query-functions
-      (remq 'process-kill-buffer-query-function
-            kill-buffer-query-functions))
+	  (remq 'process-kill-buffer-query-function
+			kill-buffer-query-functions))
 
 ;; Default to 'string' mode when using re-builder.
 (setq reb-re-syntax 'string)
@@ -241,23 +207,51 @@
 
 ;; You can actually use a real terminal from within Emacs on Linux once the
 ;; PATH environment variable is set correctly.
-(if using-linux-desktop-p
-    (progn
-      (setenv "PATH" (concat (getenv "PATH") ":~/bin"))
-      (setq exec-path (append exec-path '("~/bin")))))
+(if using-linux-p
+	(progn
+	  (setenv "PATH" (concat (getenv "PATH") ":~/bin"))
+	  (setq exec-path (append exec-path '("~/bin")))))
+
+;; Close Emacs with confirmation.
+(defun confirm-exit-from-emacs ()
+  (interactive)
+  (if (yes-or-no-p "Do you want to exit? ")
+	  (save-buffers-kill-emacs)))
+(global-set-key (kbd "C-x C-c") 'confirm-exit-from-emacs)
+
+;; Starts an MSYS shell, useful when working on Windows.
+;; FIXME: Someday I'll get this working correctly.
+(defun start-msys-shell ()
+  (interactive)
+  (setq shell-file-name "bash.exe")
+  (setq explicit-shell-file-name shell-file-name)
+  (setenv "SHELL" explicit-shell-file-name)
+  (setq w32-quote-process-args t)
+  (setq explicit-bash.exe-args '("--login" "-i"))
+  (setq shell-command-switch "-c")
+  (shell))
+
+;; A handy function for starting a shell buffer in a new window or visiting
+;; an existing shell buffer.
+;; MSYS still doesn't work well enough to replace shell on Windows, unfortunately.
+(defun start-shell ()
+  (interactive)
+  (let ((shell-buffer-name (if using-windows-p "*shell*" "*ansi-term*")))
+	(if (not (get-buffer shell-buffer-name))
+		(progn
+		  (split-window-sensibly (selected-window))
+		  (other-window 1)
+		  (if using-windows-p (shell) (ansi-term (getenv "SHELL"))))
+	  (switch-to-buffer-other-window shell-buffer-name))))
+(global-set-key (kbd "<f5>") 'start-shell)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Additional Global Key Bindings
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(define-key global-map (kbd "RET") 'newline-and-indent)
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Mode Setup
+;; Mode Hooks
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; C mode specific stuff.
 (add-hook 'c-mode-common-hook
-          (lambda ()
+		  (lambda ()
 			;; Make these patterns more evident in code.
 			(font-lock-add-keywords nil '(("\\<\\(FIXME\\|TODO\\|BUG\\|NOTE\\):" 1 font-lock-warning-face t)))
 			;; Handy for jumping between .h and .cpp files.
@@ -265,21 +259,21 @@
 
 ;; Python mode specific stuff.
 (add-hook 'python-mode-hook
-          (lambda ()
+		  (lambda ()
 			;; Setup the style based one whether I'm at home or the office.
 			(setq tab-width 4
 				  py-indent-offset 4
-				  indent-tabs-mode at-the-office-p
-				  py-smart-indentation (not at-the-office-p)
-				  python-indent 4)
-			;; Rope integration.
-			(ac-ropemacs-setup)
-			(ropemacs-mode t)))
+				  indent-tabs-mode using-windows-p
+				  py-smart-indentation (not using-windows-p)
+				  python-indent 4)))
 
 ;; Clojure mode specific stuff.
 (add-hook 'clojure-mode-hook
-          (lambda ()
-            (paredit-mode 1)))
+		  (lambda ()
+			(paredit-mode 1)))
+
+;; Javascript mode specific stuff.
+(add-to-list 'auto-mode-alist '("\\.js\\'" . js2-mode))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Start Emacs Server
