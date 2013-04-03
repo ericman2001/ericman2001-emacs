@@ -72,7 +72,7 @@ buffer-local wherever it is set."
 
 ;;;; Customization
 (defgroup flycheck nil
-  "Check syntax on-the-fly."
+  "On-the-fly syntax checking (aka \"flymake done right\")."
   :prefix "flycheck-"
   :group 'tools)
 
@@ -106,33 +106,35 @@ buffer-local wherever it is set."
     tex-lacheck
     xml-xmlstarlet
     zsh)
-  "Flycheck checkers.
+  "Syntax checkers available for automatic selection.
 
-A list of flycheck checkers to try for the current buffer.
+A list of Flycheck syntax checkers to choose from when syntax
+checking a buffer.  Flycheck will automatically select a suitable
+syntax checker from this list, unless `flycheck-checker' is set,
+either directly or with `flycheck-select-checker'.
 
-If `flycheck-checker' is nil a checker is automatically selected
-from these checkers on every syntax checker.
-
-Syntax checkers are declared with `flycheck-declare-checker'."
+Syntax checkers in this list must be declared with
+`flycheck-declare-checker'."
   :group 'flycheck
   :type '(repeat (symbol :tag "Checker")))
 
 (defvar-local flycheck-checker nil
-  "Checker to use for the current buffer.
+  "Syntax checker to use for the current buffer.
 
-If unset automatically select a suitable checker from
-`flycheck-checkers' on every syntax check.
+If unset or nil, automatically select a suitable syntax checker
+from `flycheck-checkers' on every syntax check.
 
-If set to a checker only use this checker.  If set, checkers are
-never selected automatically from `flycheck-checkers'.  If the
+If set to a syntax checker only use this syntax checker and never
+select one from `flycheck-checkers' automatically.  If the syntax
 checker is unusable in the current buffer an error is signaled.
 
-A checker is a symbol that is declared as checker with
+A syntax checker assigned to this variable must be declared with
 `flycheck-declare-checker'.
 
-Use the command `flycheck-select-checker' to select a checker for
-the current buffer, or set this variable as file local variable
-to always use a specific checker for a file.")
+Use the command `flycheck-select-checker' to select a syntax
+checker for the current buffer, or set this variable as file
+local variable to always use a specific syntax checker for a
+file.")
 (put 'flycheck-checker 'safe-local-variable 'flycheck-registered-checker-p)
 
 (defface flycheck-error-face
@@ -150,7 +152,7 @@ to always use a specific checker for a file.")
                         "0.6")
 
 (defcustom flycheck-highlighting-mode 'columns
-  "The highlighting mode.
+  "The highlighting mode for Flycheck errors and warnings.
 
 Controls how Flycheck highlights errors in buffers.  May either
 be `columns', `lines' or nil.
@@ -206,6 +208,8 @@ overlay setup)."
     (define-key pmap "c" 'flycheck-buffer)
     (define-key pmap "C" 'flycheck-clear)
     (define-key pmap (kbd "C-c") 'flycheck-compile)
+    (define-key pmap "n" 'flycheck-next-error)
+    (define-key pmap "p" 'flycheck-previous-error)
     (define-key pmap "s" 'flycheck-select-checker)
     (define-key pmap "?" 'flycheck-describe-checker)
     (define-key pmap "i" 'flycheck-info)
@@ -218,6 +222,9 @@ overlay setup)."
  '(["Check current buffer" flycheck-buffer t]
    ["Clear errors in buffer" flycheck-clear t]
    ["Compile current buffer" flycheck-compile t]
+   "---"
+   ["Go to next error" flycheck-next-error t]
+   ["Go to next error" flycheck-previous-error t]
    "---"
    ["Select syntax checker" flycheck-select-checker t]
    "---"
@@ -253,10 +260,14 @@ running checks, and empty all variables used by flycheck."
 Flycheck mode is not enabled under any of the following
 conditions:
 
-- The buffer file is loaded with Tramp.
+- No suitable syntax checker exists for the current buffer.
+- The current buffer is loaded through Tramp.
+- The current buffer is a temporary buffer (i.e. its name starts
+  with a space).
 
 Return t if Flycheck mode may be enabled, and nil otherwise."
-  (and (not (flycheck-tramp-file-p (buffer-file-name)))
+  (and (not (s-starts-with? (buffer-name) " "))
+       (not (flycheck-tramp-file-p (buffer-file-name)))
        (flycheck-get-checker-for-buffer)))
 
 ;;;###autoload
@@ -271,9 +282,11 @@ When called from Lisp, enable `flycheck-mode' if ARG is omitted,
 nil or positive.  If ARG is `toggle', toggle `flycheck-mode'.
 Otherwise behave as if called interactively.
 
+Flycheck mode will not be enabled if `flycheck-may-enable-mode' returns false.
+
 In `flycheck-mode' the buffer is automatically syntax-checked
-using the first suitable checker from `flycheck-checkers'.  Use
-`flycheck-select-checker` to select a checker for the current
+using the first suitable syntax checker from `flycheck-checkers'.
+Use `flycheck-select-checker' to select a checker for the current
 buffer manually.
 
 \\{flycheck-mode-map}"
@@ -301,7 +314,7 @@ buffer manually.
       (add-hook 'next-error-hook 'flycheck-show-error-at-point nil t)
 
       (setq flycheck-previous-next-error-function next-error-function)
-      (setq next-error-function 'flycheck-next-error)
+      (setq next-error-function 'flycheck-next-error-function)
 
       (flycheck-buffer-safe))
      (t
@@ -1775,34 +1788,40 @@ flycheck exclamation mark otherwise.")
     (error . flycheck-error-overlay))
   "Overlay categories for error levels.")
 
-(defun flycheck-add-overlay (err)
-  "Add overlay for ERR."
+(defun flycheck-get-or-create-overlay (err)
+  "Get or create the overlay for ERR."
   (flycheck-error-with-buffer err
     (let* ((mode flycheck-highlighting-mode)
-           (level (flycheck-error-level err))
            (region (flycheck-error-region err (not (eq mode 'columns))))
-           (category (cdr (assq level flycheck-overlay-categories-alist)))
-           (message (flycheck-error-message err))
-           (overlay (make-overlay (car region) (cdr region)
-                                  (flycheck-error-buffer err)))
-           (fringe-icon `(left-fringe ,(get category 'flycheck-fringe-bitmap)
-                                      ,(get category 'face))))
-      ;; TODO: Consider hooks to re-check if overlay contents change
-      (overlay-put overlay 'category category)
-      (unless mode
-        ;; Erase the highlighting from the overlay if requested by the user
-        (overlay-put overlay 'face nil))
+           (old-overlay (--first (eq (overlay-get it 'flycheck-error) err)
+                                 (flycheck-overlays-at (car region))))
+           (overlay (or old-overlay (make-overlay (car region) (cdr region)))))
       (overlay-put overlay 'flycheck-error err)
-      (overlay-put overlay 'before-string
-                   (propertize "!" 'display fringe-icon))
-      (unless (s-blank? message)
-        (overlay-put overlay 'help-echo message)))))
+      overlay)))
+
+(defun flycheck-add-overlay (err)
+  "Add overlay for ERR."
+  ;; We attempt to reuse an existing overlay for ERR, to avoid duplicate
+  ;; overlays.
+  (let* ((overlay (flycheck-get-or-create-overlay err))
+         (level (flycheck-error-level err))
+         (category (cdr (assq level flycheck-overlay-categories-alist)))
+         (fringe-icon `(left-fringe ,(get category 'flycheck-fringe-bitmap)
+                                    ,(get category 'face))))
+    ;; TODO: Consider hooks to re-check if overlay contents change
+    (overlay-put overlay 'category category)
+    (unless flycheck-highlighting-mode
+      ;; Erase the highlighting from the overlay if requested by the user
+      (overlay-put overlay 'face nil))
+    (overlay-put overlay 'flycheck-error err)
+    (overlay-put overlay 'before-string (propertize "!" 'display fringe-icon))
+    (overlay-put overlay 'help-echo (flycheck-error-message err))))
 
 (defun flycheck-add-overlays (errors)
   "Add overlays for ERRORS."
   ;; Add overlays from last to first to make sure that for each region the first
   ;; error emitted by the checker is on top
-  (mapc #'flycheck-add-overlay (reverse errors)))
+  (mapc #'flycheck-add-overlay errors))
 
 (defun flycheck-overlays-at (pos)
   "Return a list of all flycheck overlays at POS."
@@ -1826,26 +1845,49 @@ flycheck exclamation mark otherwise.")
 
 
 ;;;; Error navigation
-(defun flycheck-next-error (no-errors reset)
-  "Advance NO-ERRORS, optionally RESET before.
+(defun flycheck-next-error-function (n reset)
+  "Visit the N-th error from the current point.
 
-NO-ERRORS is a number specifying how many errors to move forward.
-IF RESET is t, move to beginning of buffer first."
-  (when reset
-    (goto-char (point-min)))
-  ;; TODO: Horribly inefficient, possibly improve by considering less errors.
-  (let* ((err-positions (-map 'flycheck-error-pos flycheck-current-errors))
-         ;; Remove the current point for the errors because we don't want to
-         ;; navigate to the current error again
-         (navigatable-errors (--remove (= (point) it) err-positions))
-         (splitted (--split-with (>= (point) it) navigatable-errors))
-         (pos-before (nreverse (car splitted)))
-         (pos-after (cadr splitted))
-         (positions (if (< no-errors 0) pos-before pos-after))
-         (pos (nth (- (abs no-errors) 1) positions)))
-    (if pos
-        (goto-char pos)
+Intended for use with `next-error-function'."
+   (let* ((n (or n 1))
+         (current-pos (if reset (point-min) (point)))
+         (before-and-after (->> flycheck-current-errors
+                             (-map 'flycheck-error-pos)
+                             (-uniq)
+                             (--remove (= current-pos it))
+                             (--split-with (>= current-pos it))))
+         (before (nreverse (car before-and-after)))
+         (after (cadr before-and-after))
+         (error-pos (nth-value (- (abs n) 1) (if (< n 0) before after))))
+    (if error-pos
+        (goto-char error-pos)
       (user-error "No more Flycheck errors"))))
+
+(defun flycheck-next-error (&optional n reset)
+  "Visit the N-th error from the current point.
+
+If RESET is given and non-nil, re-start from the beginning of the buffer.
+
+N specifies how many errors to move forwards.  If negative, move backwards."
+  (interactive "P")
+  ;; TODO: Horribly inefficient, possibly improve by considering less errors.
+  (flycheck-next-error-function n reset))
+
+(defun flycheck-previous-error (&optional n)
+  "Visit the N-th previous error.
+
+If given, N specifies the number of errors to move backwards.  If
+N is negative, move forwards instead."
+  (interactive "P")
+  (flycheck-next-error (- (or n 1))))
+
+(defun flycheck-first-error (&optional n)
+  "Visit the N-th error from beginning of the buffer.
+
+If given, N specifies the number of errors to move forward from
+the beginning of the buffer."
+  (interactive "P")
+  (flycheck-next-error n :reset))
 
 
 ;;;; Error message echoing
@@ -2300,6 +2342,8 @@ See URL `http://pypi.python.org/pypi/flake8'."
      warning)                           ; Flake8 < 2.0
     ("^\\(?1:.*?\\):\\(?2:[0-9]+\\):\\(?:\\(?3:[0-9]+\\):\\)? \\(?4:C[0-9]+.*\\)$"
      warning)                           ; McCabe complexity in Flake8 > 2.0
+    ("^\\(?1:.*?\\):\\(?2:[0-9]+\\):\\(?:\\(?3:[0-9]+\\):\\)? \\(?4:N[0-9]+.*\\)$"
+     warning)                           ; pep8-naming Flake8 plugin.
     ;; Syntax errors in Flake8 < 2.0, in Flake8 >= 2.0 syntax errors are caught
     ;; by the E.* pattern above
     ("^\\(?1:.*\\):\\(?2:[0-9]+\\): \\(?4:.*\\)$" error))

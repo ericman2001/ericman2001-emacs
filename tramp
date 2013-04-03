@@ -1,0 +1,6 @@
+;; -*- emacs-lisp -*- <13/04/02 11:56:24 c:/Users/justin.hipple/AppData/Roaming/.emacs.d/tramp>
+;; Tramp connection history.  Don't change this file.
+;; You can delete it, forcing Tramp to reapply the checks.
+
+((["pscp" "root" "sd-watertown-pd.ledsportal.com" nil]
+  nil))

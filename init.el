@@ -43,18 +43,6 @@
   (concat (expand-file-name "~/.emacs.d") "/" file))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Setup Font
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;; Evidently there are weird display issues if this is set after color theme is loaded?
-;; Spawning a new frame resulted in very strange colors applied to all buffers it contained.
-(set-default-font default-font-name)
-
-;; These lines seem to be important so that new frames get the font set correctly.
-(setq initial-frame-alist `((font . ,default-font-name)))
-(setq default-frame-alist `((font . ,default-font-name)))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Setup ELPA
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -72,6 +60,11 @@
 ;; Settings
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;; Use a decent font.
+;; Evidently there are weird display issues if this is set after color theme is loaded?
+;; Spawning a new frame resulted in very strange colors applied to all buffers it contained.
+(add-to-list 'default-frame-alist `(font . ,default-font-name))
+
 ;; Maxmize the window and start with 50/50 vertical split.
 (require 'maxframe)
 (add-hook 'window-setup-hook 'maximize-frame t)
@@ -88,6 +81,11 @@
 
 ;; Enable fancy window switching.
 (require 'switch-window)
+
+;; Enable fast in-buffer navigation.
+(require 'ace-jump-mode)
+(autoload 'ace-jump-mode "ace-jump-mode" "Emacs quick move minor mode" t)
+(global-set-key (kbd "C-c SPC") 'ace-jump-mode)
 
 ;; Enable IDO to handle buffer switching and such.
 (require 'ido)
@@ -116,9 +114,6 @@
 	  (ido-completing-read
 	   "Project file: " (tags-table-files) nil t)))))
 (global-set-key (kbd "C-x C-t") 'ido-find-file-in-tag-files)
-
-;; Minimap support.
-(require 'minimap)
 
 ;; Enable fancy autocompletion in code.
 (require 'auto-complete-config)
@@ -205,6 +200,9 @@
 (add-to-list 'auto-mode-alist '("\\.pri\\'" . shell-script-mode))
 (add-to-list 'auto-mode-alist '("\\.conf\\'" . shell-script-mode))
 
+;; Use aweseom js2 mode for editing Javascript
+(add-to-list 'auto-mode-alist '("\\.js\\'" . js2-mode))
+
 ;; You can actually use a real terminal from within Emacs on Linux once the
 ;; PATH environment variable is set correctly.
 (if using-linux-p
@@ -271,9 +269,6 @@
 (add-hook 'clojure-mode-hook
 		  (lambda ()
 			(paredit-mode 1)))
-
-;; Javascript mode specific stuff.
-(add-to-list 'auto-mode-alist '("\\.js\\'" . js2-mode))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Start Emacs Server

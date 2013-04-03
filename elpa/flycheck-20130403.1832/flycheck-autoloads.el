@@ -5,7 +5,7 @@
 
 ;;;### (autoloads (flycheck-info flycheck-def-option-var flycheck-def-config-file-var
 ;;;;;;  flycheck-declare-checker flycheck-mode) "flycheck" "flycheck.el"
-;;;;;;  (20820 50759))
+;;;;;;  (20828 36053))
 ;;; Generated autoloads from flycheck.el
 
 (defconst flycheck-mode-line-lighter " FlyC" "\
@@ -22,9 +22,11 @@ When called from Lisp, enable `flycheck-mode' if ARG is omitted,
 nil or positive.  If ARG is `toggle', toggle `flycheck-mode'.
 Otherwise behave as if called interactively.
 
+Flycheck mode will not be enabled if `flycheck-may-enable-mode' returns false.
+
 In `flycheck-mode' the buffer is automatically syntax-checked
-using the first suitable checker from `flycheck-checkers'.  Use
-`flycheck-select-checker` to select a checker for the current
+using the first suitable syntax checker from `flycheck-checkers'.
+Use `flycheck-select-checker' to select a checker for the current
 buffer manually.
 
 \\{flycheck-mode-map}
@@ -138,7 +140,7 @@ Open the Flycheck manual.
 
 ;;;***
 
-;;;### (autoloads nil nil ("flycheck-pkg.el") (20820 50759 103000))
+;;;### (autoloads nil nil ("flycheck-pkg.el") (20828 36053 619000))
 
 ;;;***
 
