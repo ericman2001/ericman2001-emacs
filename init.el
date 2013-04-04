@@ -76,7 +76,7 @@
 ;; Enable yasnippet for fancy templates.
 (require 'yasnippet)
 (yas-global-mode t)
-(yas/load-directory (libdir-file "elpa/yasnippet-0.8.0/snippets"))
+(yas/load-directory (libdir-file "elpa/yasnippet-20130218.2229/snippets"))
 (yas/load-directory (libdir-file "snippets"))
 
 ;; Enable fancy window switching.
