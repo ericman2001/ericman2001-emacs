@@ -223,9 +223,11 @@
 
 ;; You can actually use a real terminal from within Emacs on Linux once the
 ;; PATH environment variable is set correctly.
+;; Also make sure that we use a colorized prompt.
 (if using-linux-desktop-p
     (progn
       (setenv "PATH" (concat (getenv "PATH") ":~/bin"))
+      (setenv "color_prompt" "yes")
       (setq exec-path (append exec-path '("~/bin")))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
