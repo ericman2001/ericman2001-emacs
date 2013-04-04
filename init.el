@@ -76,7 +76,7 @@
 ;; Enable yasnippet for fancy templates.
 (require 'yasnippet)
 (yas-global-mode t)
-(yas/load-directory (libdir-file "elpa/yasnippet-0.8.0/snippets"))
+(yas/load-directory (libdir-file "elpa/yasnippet-20130218.2229/snippets"))
 (yas/load-directory (libdir-file "snippets"))
 
 ;; Interactive kill ring browsing.
@@ -209,9 +209,11 @@
 
 ;; You can actually use a real terminal from within Emacs on Linux once the
 ;; PATH environment variable is set correctly.
+;; Also make sure that we use a colorized prompt.
 (if using-linux-p
 	(progn
 	  (setenv "PATH" (concat (getenv "PATH") ":~/bin"))
+	  (setenv "color_prompt" "yes")
 	  (setq exec-path (append exec-path '("~/bin")))))
 
 ;; Close Emacs with confirmation.
