@@ -79,6 +79,10 @@
 (yas/load-directory (libdir-file "elpa/yasnippet-0.8.0/snippets"))
 (yas/load-directory (libdir-file "snippets"))
 
+;; Interactive kill ring browsing.
+(require 'browse-kill-ring)
+(browse-kill-ring-default-keybindings)
+
 ;; Enable fancy window switching.
 (require 'switch-window)
 
