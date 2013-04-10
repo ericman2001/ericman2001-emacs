@@ -79,10 +79,6 @@
 (yas/load-directory (libdir-file "elpa/yasnippet-20130218.2229/snippets"))
 (yas/load-directory (libdir-file "snippets"))
 
-;; Interactive kill ring browsing.
-(require 'browse-kill-ring)
-(browse-kill-ring-default-keybindings)
-
 ;; Enable fancy window switching.
 (require 'switch-window)
 
@@ -134,9 +130,6 @@
 (global-set-key (kbd "<f3>") 'highlight-symbol-next)
 (global-set-key (kbd "<S-f3>") 'highlight-symbol-prev)
 (global-set-key (kbd "<C-M-f3>") 'highlight-symbol-query-replace)
-
-;; Automatically add proper indentation after newlines.
-(electric-indent-mode t)
 
 ;; Automatically add closing character for characters that are commonly paired.
 (electric-pair-mode t)
