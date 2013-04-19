@@ -31,11 +31,11 @@
 (defvar using-osx-p (eq system-type 'darwin))
 (defvar using-linux-p (eq system-type 'gnu/linux))
 
-(defvar office-email-address "justin.hipple@zuerchertech.com")
-(defvar home-email-address "brokenreality@gmail.com")
+(defvar office-email-address "eric.wahle@zuerchertech.com")
+(defvar home-email-address "ericwahle@snappyl.com")
 
 (defvar default-font-name
-  (cond (using-windows-p "Bitstream Vera Sans Mono-8")
+  (cond (using-windows-p "Bitstream Vera Sans Mono-12")
 		(using-osx-p "Bitstream Vera Sans Mono-14")
 		("Bitstream Vera Sans Mono-10")))
 
@@ -48,6 +48,7 @@
 
 ;; Add all the libs to the load path.
 (mapcar #'(lambda (path) (add-to-list 'load-path (libdir-file path))) '("themes"))
+(add-to-list 'load-path (libdir-file "ericman2001"))
 
 ;; ELPA package archive system.
 (require 'package)
@@ -65,10 +66,9 @@
 ;; Spawning a new frame resulted in very strange colors applied to all buffers it contained.
 (add-to-list 'default-frame-alist `(font . ,default-font-name))
 
-;; Maxmize the window and start with 50/50 vertical split.
+;; Maxmize the window.
 (require 'maxframe)
 (add-hook 'window-setup-hook 'maximize-frame t)
-(add-hook 'window-setup-hook 'split-window-horizontally)
 
 ;; Enable syntax highlighting.
 (require 'tomorrow-night-bright-theme)
@@ -184,8 +184,9 @@
 ;; Default to 'string' mode when using re-builder.
 (setq reb-re-syntax 'string)
 
-;; Always show line numbers.
-(global-linum-mode t)
+;; don't use line numbers. This is broken sometimes and it makes me angry!
+;; use M-g g to get around or check status line
+(global-linum-mode 0)
 
 ;; I write C++ so default to the correct mode based on the filetypes I commonly use.
 (add-to-list 'auto-mode-alist '("\\.h\\'" . c++-mode))
@@ -241,6 +242,14 @@
 		  (if using-windows-p (shell) (ansi-term (getenv "SHELL"))))
 	  (switch-to-buffer-other-window shell-buffer-name))))
 (global-set-key (kbd "<f5>") 'start-shell)
+
+;;work in progress for semicolons
+;;enable manually
+(require 'semicolon-move-end-of-line)
+
+;;home key behavior modification
+(require 'notepad++-like-beginning-of-line)
+(global-set-key [home] 'notepad++-like-beginning-of-line)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Mode Hooks
