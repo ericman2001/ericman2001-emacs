@@ -19,6 +19,7 @@
  '(gutter-buffers-tab-visible-p nil)
  '(make-backup-files nil)
  '(paren-mode (quote paren) nil (paren))
+ '(send-mail-function (quote smtpmail-send-it))
  '(show-paren-mode t)
  '(sound-load-list nil)
  '(tool-bar-mode nil)
@@ -251,6 +252,9 @@
 (require 'notepad++-like-beginning-of-line)
 (global-set-key [home] 'notepad++-like-beginning-of-line)
 
+;;enable helm
+(helm-mode 1)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Mode Hooks
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -282,3 +286,9 @@
 ;; Start Emacs Server
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (server-start)
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )
