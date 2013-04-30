@@ -174,6 +174,9 @@
 ;; Typing replaces the selected region.
 (delete-selection-mode t)
 
+;; Automatically reload changed files from disk
+(global-auto-revert-mode t)
+
 ;; Don't make me type out 'yes' and 'no'.
 (fset 'yes-or-no-p 'y-or-n-p)
 
@@ -245,7 +248,6 @@
 (global-set-key (kbd "<f5>") 'start-shell)
 
 ;;work in progress for semicolons
-;;enable manually
 (require 'semicolon-move-end-of-line)
 
 ;;home key behavior modification
@@ -253,7 +255,12 @@
 (global-set-key [home] 'notepad++-like-beginning-of-line)
 
 ;;enable helm
+(require 'helm-config)
 (helm-mode 1)
+(require 'helm-c-yasnippet)
+(global-set-key (kbd "C-x C-f") 'helm-find-files)
+(global-set-key (kbd "C-x C-b") 'helm-buffers-list)
+(global-set-key (kbd "C-c y") 'helm-c-yas-complete)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Mode Hooks
@@ -265,7 +272,9 @@
 			;; Make these patterns more evident in code.
 			(font-lock-add-keywords nil '(("\\<\\(FIXME\\|TODO\\|BUG\\|NOTE\\):" 1 font-lock-warning-face t)))
 			;; Handy for jumping between .h and .cpp files.
-			(local-set-key  (kbd "C-c o") 'ff-find-other-file)))
+			(local-set-key  (kbd "C-c o") 'ff-find-other-file)
+			(local-set-key (kbd "C-;") 'semicolon-anyway)
+			(local-set-key (kbd ";") 'semicolon-move-end-of-line)))
 
 ;; Python mode specific stuff.
 (add-hook 'python-mode-hook

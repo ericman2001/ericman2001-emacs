@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: global-setting
+# key: global-setting
+# --
+INSERT INTO global_settings (category, name, value, comments) VALUES ('${1:CATEGORY}', '${2:NAME}', '${3:DEFAULT_VALUE}', '<zrtf>${4:DESCRIPTION}</zrtf>');
