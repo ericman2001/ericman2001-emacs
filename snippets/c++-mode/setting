@@ -2,4 +2,4 @@
 # name: setting
 # key: setting
 # --
-Core::instance()->settings()->lookup("${1:category}", "${2:setting}")$0
+Core::instance()->settings()->lookup("${1:category}", "${2:setting}", ${3:agency_id})$0

@@ -72,7 +72,9 @@
 (add-hook 'window-setup-hook 'maximize-frame t)
 
 ;; Enable syntax highlighting.
-(require 'tomorrow-night-bright-theme)
+;;(require 'tomorrow-night-bright-theme)
+(color-theme-initialize)
+(color-theme-deep-blue)
 
 ;; Enable yasnippet for fancy templates.
 (require 'yasnippet)
@@ -290,6 +292,10 @@
 (add-hook 'clojure-mode-hook
 		  (lambda ()
 			(paredit-mode 1)))
+
+(add-hook 'sgml-mode-hook
+		  (lambda ()
+			(setq sgml-basic-offset 4)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Start Emacs Server

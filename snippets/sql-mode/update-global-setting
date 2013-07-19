@@ -3,7 +3,6 @@
 # key: update-global-setting
 # --
 UPDATE global_settings
-SET active = FALSE,
-	value = '${1:VALUE}'
+SET value = '${1:VALUE}'
 WHERE category = '${2:CATEGORY}'
   AND name = '${3:NAME}';

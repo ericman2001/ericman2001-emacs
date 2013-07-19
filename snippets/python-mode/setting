@@ -2,4 +2,4 @@
 # name: setting
 # key: setting
 # --
-LedsScript.core_settingsLookup("${1:category}", "${2:setting}")
+LedsScript.core_settingsLookup("${1:category}", "${2:setting}", ${3:agency_id})
